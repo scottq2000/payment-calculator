@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Tristan's Payment Calculator</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #f97316;
+      --text: #333;
+      --text-light: #666;
+      --bg: #f8fafc;
+      --card: #fff;
+      --border: #e2e8f0;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --slider-track: #94a3b8;
+      --slider-thumb: #2563eb;
+      --error: #dc2626;  /* Added for error states */
+    }
+    .dark-mode {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --accent: #f97316;
+      --text: #e2e8f0;
+      --text-light: #94a3b8;
+      --bg: #1e293b;
+      --card: #0f172a;
+      --border: #334155;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --slider-track: #94a3b8;
+      --slider-thumb: #3b82f6;
+      --error: #ef4444;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+    }
+    h1, h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background-color: var(--card);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Added smooth transitions */
+    }
+    .card:hover {
+        background-color: var(--card-hover, #f0f0f0); /* Subtle hover effect */
+        box-shadow: 0 6px 8px var(--shadow);
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      transition: color 0.3s ease;
+    }
+    .dark-mode label {
+       color: var(--text-light); /* Slightly lighter label in dark mode */
+    }
+    select, input[type="number"], input[type="email"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s ease, color 0.3s ease; /* Added transitions */
+      color: var(--text);
+      background-color: var(--card);
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    select:disabled, input:disabled {
+      background-color: #e9ecef; /* style for disabled state */
+      cursor: not-allowed;
+      color: #6c757d;
+      border-color: #ced4da;
+    }
+    .btn {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s ease, box-shadow 0.3s ease; /* Added transform and box-shadow */
+      margin-right: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    .btn:active{
+       transform: translateY(0);
+       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    /* Range slider styling in “bluey grey”: */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: var(--slider-track);
+      border-radius: 3px;
+      outline: none;
+      margin: 0.5rem 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--slider-thumb);
+      cursor: pointer;
+      margin-top: -5px;
+      border: 2px solid #fff;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover,
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.2);
+    }
+    /* Firefox styles */
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      background: var(--slider-track);
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-moz-range-thumb {
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--slider-thumb);
+      cursor: pointer;
+      border: 2px solid #fff;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    input[type="range"]::-moz-range-thumb:hover,
+    input[type="range"]::-moz-range-thumb:active {
+      transform: scale(1.2);
+    }
+    /* Remove focus outline in Firefox */
+    input[type="range"]:focus::-moz-range-thumb {
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      outline: none;
+    }
+    #result {
+      display: none;
+      animation: fadeIn 0.5s;
+      margin-top: 2rem;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: baseline; /* Align items to the baseline */
+    }
+    .result-row:last-child {
+      border-bottom: none;
+    }
+    .result-label {
+      font-weight: 600;
+      color: var(--text-light);
+      transition: color 0.3s ease;
+    }
+     .dark-mode .result-label {
+        color: var(--text-light);
+     }
+    .result-value {
+      font-weight: 600;
+      color: var(--text); /* Ensure result values are always visible */
+      transition: color 0.3s ease;
+      font-size: 1.1rem; /* Make result values slightly larger */
+    }
+    .highlight {
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 700;
+      transition: color 0.3s ease;
+    }
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center; /* Vertically align items in the row */
+    }
+    .half {
+      width: 100%; /* Default to full width on small screens */
+      margin-bottom: 0; /* Remove default margin-bottom from form-group */
+    }
+    @media (min-width: 640px) {
+      .half {
+        width: 48%; /* Restore half width on larger screens */
+      }
+    }
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: color 0.3s ease, transform 0.3s ease; /* Added transform */
+    }
+    .theme-toggle:hover {
+      color: var(--primary);
+      transform: rotate(180deg);
+    }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      color: var(--text);
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px var(--shadow);
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+      transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease; /* Added */
+      transform: translateY(20px);
+      opacity: 0;
+    }
+     .modal-overlay.active .modal {
+        transform: translateY(0);
+        opacity: 1;
+     }
+    .modal h3 {
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.5rem;
+      transition: color 0.3s ease;
+    }
+    .modal button.close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: color 0.3s ease, transform 0.2s ease; /* Added transform */
+    }
+    .modal button.close-btn:hover {
+      color: var(--accent);
+      transform: scale(1.2);
+    }
+    .modal .btn-row {
+      margin-top: 1rem;
+      text-align: right;
+    }
+    /* Error message styling */
+    .error-message {
+      color: var(--error);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      display: none;
+      padding: 0.5rem;
+      background-color: #fecaca;
+      border-radius: 4px;
+      border: 1px solid #f87171;
+    }
+    .error-message.active {
+      display: block;
+    }
+    /* Added to align the button and input in the download modal */
+    #downloadOverlay .form-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    #downloadOverlay .form-group input {
+        margin-top: 0.5rem;
+        width: 100%;
+        max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌓</button>
+
+  <h1>Tristan's Payment Calculator</h1>
+
+  <div style="margin-bottom: 1.5rem;">
+    <button class="btn" id="show-instructions">Instructions</button>
+    <button class="btn" id="show-download">Download</button>
+  </div>
+
+  <div class="card">
+    <h2>Payment Details</h2>
+    <form id="calculator-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="monthSelect">Month:</label>
+          <select id="monthSelect">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="yearSelect">Year:</label>
+          <select id="yearSelect"></select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="monthlyIncome">Monthly Income (AUD):</label>
+          <input type="range" id="monthlyIncome" min="50000" max="300000" step="1" value="100000" />
+          <input type="number" id="monthlyIncomeNumber" min="50000" max="300000" step="1" value="100000" />
+          <div id="monthlyIncomeError" class="error-message">Please enter a valid income between 50,000 and 300,000.</div>
+        </div>
+        <div class="form-group half">
+          <label for="baseWeeklyPay">Base Weekly Pay (AED):</label>
+          <input type="range" id="baseWeeklyPaySlider" min="1200" max="20000" step="100" value="1200" />
+          <input type="number" id="baseWeeklyPayNumber" min="1200" max="20000" step="100" value="1200" />
+          <div id="baseWeeklyPayError" class="error-message">Please enter a valid weekly pay between 1,200 and 20,000.</div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Calculate Payment</button>
+    </form>
+  </div>
+
+  <div id="result" class="card">
+    <h2>Calculation Results</h2>
+    <div class="result-row">
+      <span class="result-label">Month/Year:</span>
+      <span class="result-value" id="result-date"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Monthly Income:</span>
+      <span class="result-value" id="result-income"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Mondays in month:</span>
+      <span class="result-value" id="result-mondays"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Base Weekly Pay:</span>
+      <span class="result-value" id="result-basepay"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Total Correct Pay for Month:</span>
+      <span class="result-value" id="result-total"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Total Base Already Paid:</span>
+      <span class="result-value" id="result-paid"></span>
+    </div>
+    <div class="result-row">
+      <span class="result-label">Final Top-Up:</span>
+      <span class="result-value highlight" id="result-topup"></span>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="instructionsOverlay">
+    <div class="modal">
+      <button class="close-btn" id="closeInstructions">×</button>
+      <h3>Instructions</h3>
+      <p>
+        1) Select the Month and Year to determine the number of Mondays.<br/>
+        2) Use the <strong>Monthly Income (AUD)</strong> slider or number box. You can type any integer, or move the slider. If you move the slider quickly, it’ll jump in larger increments, but slow movement allows single-AUD precision.<br/>
+        3) Set your <strong>Base Weekly Pay (AED)</strong> using its slider or number box (in 100 AED increments).<br/>
+        4) Press <strong>Calculate Payment</strong> to see the results.<br/>
+        5) Click <strong>Download</strong> to save or email a PDF of the results.
+      </p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="downloadOverlay">
+    <div class="modal">
+      <button class="close-btn" id="closeDownload">×</button>
+      <h3>Download or Email PDF</h3>
+      <p>Select an option below:</p>
+      <div class="form-group">
+        <button class="btn" id="downloadPdfBtn">Download PDF</button>
+      </div>
+      <div class="form-group">
+        <label for="emailAddress">Or email to:</label>
+        <input type="email" id="emailAddress" placeholder="Enter email address" />
+        <div id="emailError" class="error-message">Please enter a valid email address.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="emailPdfBtn">Email PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Populate Year Dropdown
+      const yearSelect = document.getElementById("yearSelect");
+      const currentYear = new Date().getFullYear();
+      for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+      // Set current month as default
+      document.getElementById("monthSelect").value = new Date().getMonth() + 1;
+
+      // --- Sync sliders and number inputs ---
+      function syncSliderWithNumber(slider, numberInput, errorId) {
+        const errorElement = document.getElementById(errorId);
+        let isErrorDisplayed = false;
+
+        function validateAndUpdate() {
+            let value = Number(numberInput.value);
+            const min = Number(slider.min);
+            const max = Number(slider.max);
+
+            if (isNaN(value) || value < min || value > max) {
+                if (!isErrorDisplayed) {
+                    errorElement.classList.add("active");
+                    isErrorDisplayed = true;
+                }
+                return; // Stop updating if value is invalid
+            } else {
+                errorElement.classList.remove("active");
+                isErrorDisplayed = false;
+            }
+            slider.value = value;
+        }
+
+        slider.addEventListener("input", () => {
+          numberInput.value = slider.value;
+          validateAndUpdate(); // Call validation on input
+        });
+
+        numberInput.addEventListener("input", () => {
+          validateAndUpdate();
+        });
+
+        numberInput.addEventListener("blur", () => {
+            validateAndUpdate();
+        });
+      }
+
+      const monthlyIncomeSlider = document.getElementById("monthlyIncome");
+      const monthlyIncomeNumber = document.getElementById("monthlyIncomeNumber");
+      const baseWeeklyPaySlider = document.getElementById("baseWeeklyPaySlider");
+      const baseWeeklyPayNumber = document.getElementById("baseWeeklyPayNumber");
+
+      syncSliderWithNumber(monthlyIncomeSlider, monthlyIncomeNumber, "monthlyIncomeError");
+      syncSliderWithNumber(baseWeeklyPaySlider, baseWeeklyPayNumber, "baseWeeklyPayError");
+
+
+      // --- Dynamic step adjustment for Monthly Income slider ---
+      let lastIncomeEventTime = Date.now();
+      let lastIncomeValue = parseFloat(monthlyIncomeSlider.value);
+      monthlyIncomeSlider.addEventListener("input", function(e) {
+        let currentTime = Date.now();
+        let currentValue = parseFloat(e.target.value);
+        let deltaTime = currentTime - lastIncomeEventTime; // in ms
+        let deltaValue = Math.abs(currentValue - lastIncomeValue);
+        if (deltaTime < 1) deltaTime = 1; // avoid division by zero
+
+        // AUD per second
+        let speedPerSecond = (deltaValue / deltaTime) * 1000;
+
+        // Decide slider step based on speed
+        let newStep = 1; // default: single-AUD precision
+        if (speedPerSecond >= 1000) {
+          newStep = 1000;
+        } else if (speedPerSecond >= 100) {
+          newStep = 100;
+        } else if (speedPerSecond >= 10) {
+          newStep = 10;
+        }
+        // Only update the slider's step, not the number input
+        e.target.step = newStep;
+
+        lastIncomeEventTime = currentTime;
+        lastIncomeValue = currentValue;
+      });
+
+      // --- Piecewise interpolation for monthly income → weekly wage ---
+      const breakpoints = [
+        { income: 100000, wage: 1200 },
+        { income: 105000, wage: 1300 },
+        { income: 110000, wage: 1500 },
+        { income: 115000, wage: 1700 },
+        { income: 120000, wage: 2000 },
+        { income: 125000, wage: 2500 },
+        { income: 130000, wage: 3000 },
+        { income: 135000, wage: 3500 },
+        { income: 140000, wage: 4000 },
+        { income: 145000, wage: 4500 },
+        { income: 150000, wage: 5000 },
+        { income: 155000, wage: 5500 },
+        { income: 160000, wage: 6000 },
+        { income: 165000, wage: 6500 },
+        { income: 170000, wage: 7000 },
+        { income: 175000, wage: 7500 },
+        { income: 180000, wage: 8000 },
+        { income: 185000, wage: 8500 },
+        { income: 190000, wage: 9000 },
+        { income: 195000, wage: 9500 },
+        { income: 200000, wage: 10000 }
+      ];
+      function getWeeklyWage(income) {
+        if (income <= 100000) return 1200;
+        if (income >= 200000) return 10000;
+        for (let i = 0; i < breakpoints.length - 1; i++) {
+          const low = breakpoints[i];
+          const high = breakpoints[i + 1];
+          if (income >= low.income && income <= high.income) {
+            const slope = (high.wage - low.wage) / (high.income - low.income);
+            const wage = low.wage + slope * (income - low.income);
+            return Math.round(wage);
+          }
+        }
+        return 1200;
+      }
+
+      // --- Count Mondays in a given month/year ---
+      function getMondaysCount(year, month) {
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        let mondays = 0;
+        let current = new Date(firstDay);
+        while (current <= lastDay) {
+          if (current.getDay() === 1) mondays++;
+          current.setDate(current.getDate() + 1);
+        }
+        return mondays;
+      }
+
+      // --- Form submission: Calculate results ---
+      document.getElementById("calculator-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const month = Number(document.getElementById("monthSelect").value);
+        const year = Number(document.getElementById("yearSelect").value);
+        const income = Number(monthlyIncomeNumber.value);  // Use number input value
+        const basePay = Number(baseWeeklyPayNumber.value); // Use number input value
+
+         // Validate inputs before calculation
+        if (income < 50000 || income > 300000) {
+            document.getElementById("monthlyIncomeError").classList.add("active");
+            return;
+        } else {
+             document.getElementById("monthlyIncomeError").classList.remove("active");
+        }
+
+        if (basePay < 1200 || basePay > 20000) {
+            document.getElementById("baseWeeklyPayError").classList.add("active");
+            return;
+        } else {
+            document.getElementById("baseWeeklyPayError").classList.remove("active");
+        }
+        const mondaysCount = getMondaysCount(year, month);
+        const correctWeeklyPay = getWeeklyWage(income);
+        const totalCorrect = correctWeeklyPay * mondaysCount;
+        const totalBase = basePay * mondaysCount;
+        const topUp = totalCorrect - totalBase;
+
+        const monthNames = [
+          "January","February","March","April","May","June",
+          "July","August","September","October","November","December"
+        ];
+        document.getElementById("result-date").textContent = `${monthNames[month - 1]} ${year}`;
+        document.getElementById("result-income").textContent = `${income.toLocaleString()} AUD`;
+        document.getElementById("result-mondays").textContent = mondaysCount;
+        document.getElementById("result-basepay").textContent = `${basePay.toLocaleString()} AED`;
+        document.getElementById("result-total").textContent = `${totalCorrect.toLocaleString()} AED`;
+        document.getElementById("result-paid").textContent = `${totalBase.toLocaleString()} AED`;
+        document.getElementById("result-topup").textContent = `${topUp.toLocaleString()} AED`;
+
+        document.getElementById("result").style.display = "block";
+        document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+      });
+
+      // --- Modal handling for Instructions & Download ---
+      const instructionsOverlay = document.getElementById("instructionsOverlay");
+      const downloadOverlay = document.getElementById("downloadOverlay");
+      document.getElementById("show-instructions").addEventListener("click", () => {
+        instructionsOverlay.classList.add("active");
+      });
+      document.getElementById("closeInstructions").addEventListener("click", () => {
+        instructionsOverlay.classList.remove("active");
+      });
+      document.getElementById("show-download").addEventListener("click", () => {
+        downloadOverlay.classList.add("active");
+      });
+      document.getElementById("closeDownload").addEventListener("click", () => {
+        downloadOverlay.classList.remove("active");
+      });
+
+      // --- Theme toggle ---
+      const themeToggle = document.getElementById("theme-toggle");
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+      });
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+      }
+
+      // --- PDF download / Email (placeholders) ---
+      const emailInput = document.getElementById("emailAddress");
+      const emailError = document.getElementById("emailError");
+      document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+        alert("PDF download functionality is not implemented in this demo.");
+      });
+
+      document.getElementById("emailPdfBtn").addEventListener("click", () => {
+        const email = emailInput.value;
+        const emailPattern = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+
+        if (!emailPattern.test(email)) {
+          emailError.classList.add("active");
+          return;
+        } else {
+          emailError.classList.remove("active");
+        }
+        alert(`Emailing PDF to ${email} is not implemented in this demo.`);
+      });
+      emailInput.addEventListener("input", () => {
+        emailError.classList.remove("active");
+      });
+    });
+  </script>
+</body>
+</html>
